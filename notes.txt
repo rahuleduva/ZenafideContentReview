@@ -1,0 +1,24 @@
+Assumptions-
+1. Compliance users are the ones who can create/edit/view/delete guidelines. We are assuming that one
+compliance user can edit/delete other compliance users guidelines as well.
+2. For simplicity, we will assume that once the guidelines are marked as passed/failed against a content, the reviewer can not change it again. The content author has to create a fresh content again.
+3. For general public readers, the only the content which are passed, will be visible.
+Endpoints - 
+
+
+
+To run the assignment-
+1. DB is already included, no need to create db or data
+2. Unzip the zipped file.
+3. Go inside the project folder.
+5. Activate the virtual environment.(You may create virtual env and install modules from requirements.txt)
+6. Run python manage.py runserver
+7. Go to 127.0.0.1:8000/admin
+8. Login with credentials admin01 - password
+9. Go to Users and check the different types of users. You may get usernames from ther only. All users other than superuser have password as password@123
+
+
+APIs:
+Swagger is integrated. It can be reached at http://127.0.0.1:8000/swagger/
+
+Note:  No users related apis have been created. Sufficient users exist in the db already and can be checked in django admin
