@@ -8,8 +8,6 @@ from content_management.views import (
     ContentGuidelinesBulkApprovalV2,
 )
 
-# from zenafide_content_review.views import schema_view, ApiRoot
-
 urlpatterns = [
     path('listCreateGuideline/', ListCreateGuideline.as_view(), name='listCreateGuideline'),
     path('retrieveUpdateDeleteGuideline/<int:pk>/', RetrieveUpdateDestroyGuideline.as_view(), name='retrieveUpdateDeleteGuideline'),
