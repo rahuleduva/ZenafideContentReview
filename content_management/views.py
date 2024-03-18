@@ -7,6 +7,9 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     CreateAPIView,
 )
+from django_filters import rest_framework as filters
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db.models import Q
 
 from content_management.serializers import ( 
     GuidelineListCreateSerializer,
@@ -45,7 +48,23 @@ class ListCreateContent(ListCreateAPIView):
     serializer_class = ContentListCreateSerializer
     queryset = Content.objects.all().prefetch_related()
     permission_classes = [IsContentCreatorOrReadOnly]
+    filter_backends = (filters.DjangoFilterBackend, SearchFilter,)
+    filterset_fields = ['is_submitted', 'status']
+    search_fields = ['title']
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated and user.user_type in ('author', 'reviewer'):
+            if user.user_type == 'author':
+                qs = qs.exclude(
+                    ~Q(status='PASSED') & ~Q(created_by=user)
+                )
+            elif user.user_type == 'compliance_user':
+                qs = qs.filter(is_submitted=True)
+        else:
+            qs = qs.filter(status='PASSED')
+        return qs
 
 class RetrieveUpdateDestroyContent(RetrieveUpdateDestroyAPIView):
     serializer_class = ContentRetrieveUpdateSerializer

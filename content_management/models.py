@@ -12,6 +12,7 @@ class Guideline(models.Model):
 
 class Content(models.Model):
     CONTENT_APPROVAL_CHOICES = (
+        ('NOT_REVIEWED', 'Not Reviewed'),
         ('PASSED', 'Passed'),
         ('FAILED', 'Failed'),
     )
@@ -19,7 +20,7 @@ class Content(models.Model):
     content_file = models.FileField(upload_to='author_content_files')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     is_submitted = models.BooleanField(default=False)
-    status = models.CharField(choices=CONTENT_APPROVAL_CHOICES, max_length=10, null=True, blank=True)
+    status = models.CharField(choices=CONTENT_APPROVAL_CHOICES, max_length=15, default='NOT_REVIEWED')
 
 
 class ContentGuidelineApproval(models.Model):
