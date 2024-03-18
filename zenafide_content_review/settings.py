@@ -41,7 +41,16 @@ DJANGO_APPS = [
     'rest_framework',
 ]
 
-INSTALLED_APPS = DJANGO_APPS
+THIRD_PARTY_APPS = [
+    'drf_yasg',
+]
+
+LOCAL_APPS = [
+    'user_management.apps.UserManagementConfig',
+    'content_management.apps.ContentManagementConfig',
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
