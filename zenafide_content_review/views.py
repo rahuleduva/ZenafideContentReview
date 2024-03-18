@@ -2,6 +2,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 from rest_framework.generics import GenericAPIView
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from django.urls import get_resolver
@@ -17,7 +18,8 @@ schema_view = get_schema_view(
    permission_classes=[permissions.AllowAny],
 )
 
-class ApiRoot(GenericAPIView): 
+# class ApiRoot(GenericAPIView): # TODO: Revisit later to check why it was causing issue while swagger reload
+class ApiRoot(APIView): 
     name = 'api-root'
 
     def get_urls(self, request, url_patterns, current_app=None):
