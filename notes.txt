@@ -4,7 +4,7 @@ compliance user can edit/delete other compliance users guidelines as well.
 2. For simplicity, we will assume that once the guidelines are marked as passed/failed against a content, the reviewer can not change it again. The content author has to create a fresh content again.
 3. For general public readers, the only the content which are passed, will be visible.
 Endpoints - 
-
+Mentioned in API_DOCUMENTATION.docx
 
 
 To run the assignment-
