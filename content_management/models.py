@@ -38,3 +38,11 @@ class ContentGuidelineApproval(models.Model):
                                 related_name='content_guidelines_actions')
     acted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     is_approved = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["guideline", "content"],
+                name="unique_guideline_content"
+            ),
+        ]    
