@@ -1,12 +1,5 @@
 from django.urls import path, include
 from content_management.views import (
-    ListCreateGuideline,
-    RetrieveUpdateDestroyGuideline,
-    ListCreateContent,
-    RetrieveUpdateDestroyContent,
-    ContentGuidelineBulkApproval,
-    ContentGuidelinesBulkApprovalV2,
-
     GuidelineViewSet,
     ContentViewSet,
     ContentGuidelinesBulkApprovalViewset,
