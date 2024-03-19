@@ -107,6 +107,24 @@ class ContentsTest(TestCase):
             )
             user.set_password('password@123')
             user.save()
+        
+        guideline_payloads = [
+            {
+            "tag" : "Copyright and intellectual property rights",
+            "description" : "User should not add copyright material in their content",
+            "created_by" : user            
+            },
+            {
+            "tag" : "Guideline for Job Description",
+            "description" : "Do not use discriminatory language in your content",
+            "created_by" : user            
+            },            
+        ]
+        self.guidelines = []
+        for g in guideline_payloads:
+            obj = Guideline.objects.create(**g)
+            self.guidelines.append(obj)
+
 
     def test_only_author_can_create(self):
         user = User.objects.get(username='author01')
@@ -131,9 +149,8 @@ class ContentsTest(TestCase):
             response = client.post('/api/content_management/contents/', {**payload, 'content_file': fp},
                                 format='multipart')
             self.assertEqual(response.status_code, 401)
-        try:
-            os.remove(os.path.join(str(settings.MEDIA_ROOT), content.content_file.name))
-        except: pass
+        # Deleting the content explicitly so that it can trigger required signal for file deletion.
+        content.delete()
 
     def test_creator_retrieve_update_delete_and_readonly_for_others(self):
         user = User.objects.get(username='author02')
@@ -187,9 +204,6 @@ class ContentsTest(TestCase):
         self.assertEqual(resp_json.get('non_field_errors', [''])[0], 'Can not update after content has been submitted.')
 
         delete_response = client.delete(f'/api/content_management/contents/{obj.id}/')
-        try:
-            os.remove(os.path.join(str(settings.MEDIA_ROOT), obj.content_file.name))
-        except: pass
         self.assertEqual(delete_response.status_code, 204)
 
 
@@ -224,52 +238,74 @@ class ContentGuidelinesApprovalsTest(TestCase):
             obj = Guideline.objects.create(**g)
             self.guidelines.append(obj)
 
+    def create_content_object(self, author):
+        content_payload = {
+            "title": "JD for job"
+        }
+        obj = None
+        with open("sample_files/sample-1.txt", "rb") as fp:
+            obj = Content(**content_payload)
+            obj.content_file = File(fp, name=os.path.basename(fp.name))
+            obj.created_by = author
+            obj.save()
+        return obj        
 
     def test_approver_can_approve(self):
         author = User.objects.get(username='author01')
         reviewer = User.objects.get(username='reviewer01')
         client = APIClient()
         client.force_authenticate(user=author)
-        content_payload = {
-            "title": "JD for job"
-        }
-        obj = None
-        
-        with open("sample_files/sample-1.txt", "rb") as fp:
-            obj = Content(**content_payload)
-            obj.content_file = File(fp, name=os.path.basename(fp.name))
-            obj.created_by = author
-            obj.save()
 
+        # Checking for Content FAILED case
+        obj = self.create_content_object(author)
         if obj:
             get_response = client.get(f'/api/content_management/contents/{obj.id}/')
-        self.assertEqual(get_response.status_code, 200)
+            self.assertEqual(get_response.status_code, 200)
 
-        client.force_authenticate(user=reviewer)
-        get_response = client.get(f'/api/content_management/contents/{obj.id}/')
-        self.assertEqual(get_response.status_code, 200)
+            client.force_authenticate(user=reviewer)
+            get_response = client.get(f'/api/content_management/contents/{obj.id}/')
+            self.assertEqual(get_response.status_code, 200)
 
-        review_payload = {
-            "content": obj.id,
-            "guidelines_passed": [
-                self.guidelines[0].id,
-            ],
-            "guidelines_failed": [
-                self.guidelines[1].id,
-            ]
-        }
-        resp = client.post('/api/content_management/contentGuidelinesBulkApprovalsViewset/', review_payload, format='json')
-        resp_json = resp.json()
-        self.assertEqual(resp_json.get('content'), ["Can not take action on draft content."])
+            review_payload = {
+                "content": obj.id,
+                "guidelines_passed": [
+                    self.guidelines[0].id,
+                ],
+                "guidelines_failed": [
+                    self.guidelines[1].id,
+                ]
+            }
+            resp = client.post('/api/content_management/contentGuidelinesBulkApprovalsViewset/', review_payload, format='json')
+            resp_json = resp.json()
+            self.assertEqual(resp_json.get('content'), ["Can not take action on draft content."])
 
-        obj.is_submitted = True
-        obj.save()
+            obj.is_submitted = True
+            obj.save()
 
-        resp = client.post('/api/content_management/contentGuidelinesBulkApprovalsViewset/', review_payload, format='json')
-        resp_json = resp.json()
-        obj.refresh_from_db()
-        self.assertEqual(obj.status, 'FAILED')
+            resp = client.post('/api/content_management/contentGuidelinesBulkApprovalsViewset/', review_payload, format='json')
+            resp_json = resp.json()
+            obj.refresh_from_db()
+            self.assertEqual(obj.status, 'FAILED') # Because in our test case, all guidelines not passed
+            # Deleting object to trigger file deletion with signal
+            obj.delete()
 
-        try:
-            os.remove(os.path.join(str(settings.MEDIA_ROOT), obj.content_file.name))
-        except: pass        
+        # Checking for content PASSED case
+        obj = self.create_content_object(author)
+        if obj:
+            obj.is_submitted = True
+            obj.save()
+            review_payload = {
+                "content": obj.id,
+                "guidelines_passed": [
+                    self.guidelines[0].id,
+                    self.guidelines[1].id,
+                ]
+            }
+            resp = client.post('/api/content_management/contentGuidelinesBulkApprovalsViewset/', review_payload, format='json')
+            resp_json = resp.json()
+            obj.refresh_from_db()
+            self.assertEqual(obj.status, 'PASSED') # Because in our test case, all guidelines passed
+            # Deleting object to trigger file deletion with signal
+            obj.delete()                    
+
+
