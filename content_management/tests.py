@@ -53,7 +53,6 @@ class GuidelinesTest(TestCase):
         }
         response = client.post('/api/content_management/guidelines/', payload,
                                format='json')
-        response_json = response.json()
         self.assertEqual(response.status_code, 401)
 
     def test_only_compliance_user_can_retrieve_update_delete(self):
@@ -70,11 +69,22 @@ class GuidelinesTest(TestCase):
         get_response = client.get(f'/api/content_management/guidelines/{obj.id}/')
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.json().get('description'), post_payload['description'])
-        patch_response = client.patch(f'/api/content_management/guidelines/{obj.id}/',
+        client.patch(f'/api/content_management/guidelines/{obj.id}/',
                                 {"description" : edited_description},
                                format='json')
         obj.refresh_from_db()
         self.assertEqual(obj.description, edited_description,
                          msg='Could not update description successfully')
+
+        client.force_authenticate(user=None)
+        get_response = client.get(f'/api/content_management/guidelines/{obj.id}/')
+        self.assertEqual(get_response.status_code, 200)
+
+        resp = client.patch(f'/api/content_management/guidelines/{obj.id}/',
+                                {"description" : edited_description},
+                               format='json')
+        self.assertEqual(resp.status_code, 401)
+
+        client.force_authenticate(user=user)
         delete_response = client.delete(f'/api/content_management/guidelines/{obj.id}/')
-        self.assertEqual(delete_response.status_code, 204)
+        self.assertEqual(delete_response.status_code, 204)    
