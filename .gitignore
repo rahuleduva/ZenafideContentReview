@@ -20,6 +20,7 @@ include/
 lib/                                  
 local/
 venv/
+env/
 venv*/
 env3*/                                                                        
 random/

@@ -273,4 +273,3 @@ class ContentGuidelinesApprovalsTest(TestCase):
         try:
             os.remove(os.path.join(str(settings.MEDIA_ROOT), obj.content_file.name))
         except: pass        
-
